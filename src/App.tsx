@@ -1,6 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Routes, Route, Link, useParams } from "react-router-dom";
 
+// ----------------------------------------------------------------------
+// TYPES
+// ----------------------------------------------------------------------
 interface EventItem {
   id: string;
   slug: string;
@@ -14,7 +17,58 @@ interface EventItem {
   featured?: boolean;
 }
 
-// 1. HALAMAN UTAMA (BLOG FEED STYLE)
+interface AdsterraBannerProps {
+  atKey: string;
+  height?: number;
+  width?: number;
+}
+
+// ----------------------------------------------------------------------
+// KOMPONEN IKLAN ADSTERRA (BANNER)
+// ----------------------------------------------------------------------
+function AdsterraBanner({
+  atKey,
+  height = 90,
+  width = 728,
+}: AdsterraBannerProps) {
+  const bannerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!bannerRef.current) return;
+
+    // Clean up container
+    bannerRef.current.innerHTML = "";
+
+    const confScript = document.createElement("script");
+    confScript.type = "text/javascript";
+    confScript.text = `
+      atOptions = {
+        'key' : '${atKey}',
+        'format' : 'iframe',
+        'height' : ${height},
+        'width' : ${width},
+        'params' : {}
+      };
+    `;
+
+    const adScript = document.createElement("script");
+    adScript.type = "text/javascript";
+    adScript.src = `//www.highperformanceformat.com/${atKey}/invoke.js`;
+
+    bannerRef.current.appendChild(confScript);
+    bannerRef.current.appendChild(adScript);
+  }, [atKey, height, width]);
+
+  return (
+    <div className="my-6 flex justify-center items-center overflow-hidden bg-slate-100 p-2 rounded-xl border border-dashed border-slate-300 min-h-[100px]">
+      <div ref={bannerRef} />
+    </div>
+  );
+}
+
+// ----------------------------------------------------------------------
+// 1. HALAMAN UTAMA (HOME / BLOG FEED)
+// ----------------------------------------------------------------------
 function HomePage({
   events,
   loading,
@@ -24,23 +78,28 @@ function HomePage({
 }) {
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
 
-  if (loading)
+  if (loading) {
     return (
-      <div className="p-12 text-center text-slate-500">Memuat artikel...</div>
+      <div className="p-12 text-center text-slate-500 font-medium">
+        Memuat artikel & event...
+      </div>
     );
+  }
 
   const categories = ["All", "Concert", "Festival", "Trends"];
   const filteredEvents =
     selectedCategory === "All"
       ? events
-      : events.filter((e) => e.category === selectedCategory);
+      : events.filter(
+          (e) => e.category.toLowerCase() === selectedCategory.toLowerCase(),
+        );
 
   const featuredPost = events.find((e) => e.featured) || events[0];
   const regularPosts = filteredEvents.filter((e) => e.id !== featuredPost?.id);
 
   return (
     <div className="space-y-8">
-      {/* Category Pills Filter */}
+      {/* Category Filter Pills */}
       <div className="flex gap-2 overflow-x-auto pb-2 border-b border-slate-200 text-sm">
         {categories.map((cat) => (
           <button
@@ -48,7 +107,7 @@ function HomePage({
             onClick={() => setSelectedCategory(cat)}
             className={`px-4 py-1.5 rounded-full font-medium transition-all ${
               selectedCategory === cat
-                ? "bg-indigo-600 text-white"
+                ? "bg-indigo-600 text-white shadow-xs"
                 : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
             }`}
           >
@@ -57,7 +116,7 @@ function HomePage({
         ))}
       </div>
 
-      {/* Featured Headline Post (Hero Article) */}
+      {/* Featured Article (Hero Section) */}
       {featuredPost && selectedCategory === "All" && (
         <article className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs grid md:grid-cols-2 gap-6 items-center">
           <div className="h-64 md:h-full w-full overflow-hidden">
@@ -77,7 +136,7 @@ function HomePage({
             <h2 className="text-xl md:text-2xl font-bold text-slate-900 leading-snug">
               <Link
                 to={`/event/${featuredPost.slug}`}
-                className="hover:text-indigo-600"
+                className="hover:text-indigo-600 transition-colors"
               >
                 {featuredPost.title}
               </Link>
@@ -98,12 +157,14 @@ function HomePage({
         </article>
       )}
 
-      {/* Banner Iklan Tengah */}
-      <div className="p-3 bg-slate-200 border border-dashed border-slate-400 rounded-lg text-center text-xs text-slate-600">
-        [ Slot Iklan Banner - Monetag / Adsterra ]
-      </div>
+      {/* Slot Iklan Banner Adsterra (Ganti KEY_ADSTERRA dengan key milikmu) */}
+      <AdsterraBanner
+        atKey="8157ab8b546ad933d958680a417a9cc4"
+        height={90}
+        width={728}
+      />
 
-      {/* Grid Cards (3 Kolom/Responsif HP) */}
+      {/* Grid Articles Section */}
       <section className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {regularPosts.map((post) => (
           <article
@@ -125,7 +186,7 @@ function HomePage({
                 <h3 className="font-bold text-slate-900 text-base line-clamp-2 leading-snug">
                   <Link
                     to={`/event/${post.slug}`}
-                    className="hover:text-indigo-600"
+                    className="hover:text-indigo-600 transition-colors"
                   >
                     {post.title}
                   </Link>
@@ -152,17 +213,23 @@ function HomePage({
   );
 }
 
-// 2. HALAMAN DETAIL ARTIKEL / BLOG
+// ----------------------------------------------------------------------
+// 2. HALAMAN DETAIL ARTIKEL (TARGET SEO)
+// ----------------------------------------------------------------------
 function DetailPage({ events }: { events: EventItem[] }) {
   const { slug } = useParams();
   const post = events.find((e) => e.slug === slug);
 
-  if (!post)
+  if (!post) {
     return (
-      <div className="p-8 text-center text-slate-500">
-        Artikel tidak ditemukan.
+      <div className="p-12 text-center text-slate-500">
+        Artikel tidak ditemukan.{" "}
+        <Link to="/" className="text-indigo-600 underline">
+          Kembali ke beranda
+        </Link>
       </div>
     );
+  }
 
   return (
     <article className="bg-white rounded-2xl border border-slate-200 p-6 md:p-8 space-y-6 max-w-3xl mx-auto shadow-2xs">
@@ -180,7 +247,7 @@ function DetailPage({ events }: { events: EventItem[] }) {
         <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 leading-tight">
           {post.title}
         </h1>
-        <div className="flex items-center gap-4 text-xs text-slate-500 border-y border-slate-100 py-3">
+        <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 border-y border-slate-100 py-3">
           <span>🗓️ {post.date}</span>
           <span>📍 {post.location}</span>
           <span>💰 {post.price}</span>
@@ -195,10 +262,12 @@ function DetailPage({ events }: { events: EventItem[] }) {
         />
       </div>
 
-      {/* Area Banner Iklan Dalam Artikel */}
-      <div className="p-3 bg-slate-100 border border-dashed border-slate-300 rounded text-center text-xs text-slate-500">
-        [ Slot Iklan Banner Tengah Artikel ]
-      </div>
+      {/* Slot Iklan Banner Tengah Artikel */}
+      <AdsterraBanner
+        atKey="YOUR_ADSTERRA_BANNER_KEY"
+        height={90}
+        width={728}
+      />
 
       <div className="prose prose-slate text-slate-700 text-sm leading-relaxed space-y-4">
         <p className="text-base font-medium text-slate-900">{post.excerpt}</p>
@@ -240,26 +309,32 @@ function DetailPage({ events }: { events: EventItem[] }) {
   );
 }
 
-// 3. MAIN WRAPPER
+// ----------------------------------------------------------------------
+// 3. MAIN APP ROUTER
+// ----------------------------------------------------------------------
 export default function App() {
   const [events, setEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch("/events.json")
-      .then((res) => res.json())
-      .then((data) => {
+      .then((res) => {
+        if (!res.ok) throw new Error("Network response was not ok");
+        return res.json();
+      })
+      .then((data: EventItem[]) => {
         setEvents(data);
         setLoading(false);
       })
       .catch((err) => {
-        console.error(err);
+        console.error("Failed to load events:", err);
         setLoading(false);
       });
   }, []);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
+      {/* Header / Navbar */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-20">
         <div className="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
           <Link
@@ -269,11 +344,12 @@ export default function App() {
             GlobalFoc<span className="text-slate-900">.</span>
           </Link>
           <span className="text-xs font-semibold bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full border border-indigo-200">
-            Global Portal
+            Global Hub
           </span>
         </div>
       </header>
 
+      {/* Main Container */}
       <main className="max-w-5xl mx-auto px-4 py-8">
         <Routes>
           <Route
@@ -284,8 +360,9 @@ export default function App() {
         </Routes>
       </main>
 
+      {/* Footer */}
       <footer className="bg-white border-t border-slate-200 py-6 mt-12 text-center text-xs text-slate-500">
-        © 2026 GlobalFoc. Everyday Hub for Events & Trends.
+        © 2026 GlobalFoc. Your Everyday Hub for Events, Trends & Insights.
       </footer>
     </div>
   );
