@@ -1,0 +1,32 @@
+[
+  {
+    "id": "1",
+    "slug": "konser-seventeen-jakarta-2026",
+    "title": "SEVENTEEN World Tour in Jakarta",
+    "category": "Concert",
+    "date": "15 Nov 2026",
+    "location": "GBK Madya Stadium, Jakarta",
+    "price": "Rp 1.500.000 - Rp 3.800.000",
+    "status": "Upcoming"
+  },
+  {
+    "id": "2",
+    "slug": "coldplay-asia-tour-2026",
+    "title": "Coldplay Music of the Spheres Asia",
+    "category": "Concert",
+    "date": "20 Des 2026",
+    "location": "National Stadium, Singapore",
+    "price": "$128 - $398",
+    "status": "War Soon"
+  },
+  {
+    "id": "3",
+    "slug": "pesta-pora-2026",
+    "title": "Pestapora Festival 2026",
+    "category": "Festival",
+    "date": "25-27 Sep 2026",
+    "location": "Gambir Expo Kemayoran, Jakarta",
+    "price": "Rp 450.000 - Rp 750.000",
+    "status": "Presale On"
+  }
+]
