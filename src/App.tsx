@@ -1,7 +1,12 @@
 import { useEffect, useState, useRef } from "react";
 import { Routes, Route, Link, useParams } from "react-router-dom";
 import { supabase } from "./lib/supabase";
+import AdminPage from "./pages/AdminPage";
+import LoginPage from "./pages/LoginPage"; //  1. Import Halaman Login
 
+// ----------------------------------------------------------------------
+// TYPES
+// ----------------------------------------------------------------------
 interface EventItem {
   id: string;
   slug: string;
@@ -12,6 +17,8 @@ interface EventItem {
   price: string;
   image: string;
   excerpt: string;
+  content: string;
+  official_link?: string;
   featured?: boolean;
 }
 
@@ -21,6 +28,9 @@ interface AdsterraBannerProps {
   width?: number;
 }
 
+// ----------------------------------------------------------------------
+// KOMPONEN IKLAN ADSTERRA (BANNER)
+// ----------------------------------------------------------------------
 function AdsterraBanner({
   atKey,
   height = 90,
@@ -31,7 +41,6 @@ function AdsterraBanner({
   useEffect(() => {
     if (!bannerRef.current) return;
 
-    // Clean up container
     bannerRef.current.innerHTML = "";
 
     const confScript = document.createElement("script");
@@ -81,7 +90,7 @@ function HomePage({
     );
   }
 
-  const categories = ["All", "Concert", "Festival", "Trends"];
+  const categories = ["All", "Concert", "Festival", "Trends", "Lifestyle"];
   const filteredEvents =
     selectedCategory === "All"
       ? events
@@ -152,9 +161,9 @@ function HomePage({
         </article>
       )}
 
-      {/* Slot Iklan Banner Adsterra (Ganti KEY_ADSTERRA dengan key milikmu) */}
+      {/* Slot Iklan Banner Adsterra */}
       <AdsterraBanner
-        atKey="8157ab8b546ad933d958680a417a9cc4"
+        atKey="YOUR_ADSTERRA_BANNER_KEY"
         height={90}
         width={728}
       />
@@ -266,12 +275,8 @@ function DetailPage({ events }: { events: EventItem[] }) {
 
       <div className="prose prose-slate text-slate-700 text-sm leading-relaxed space-y-4">
         <p className="text-base font-medium text-slate-900">{post.excerpt}</p>
-        <p>
-          Informasi mengenai penjualan tiket resmi untuk{" "}
-          <strong>{post.title}</strong> telah diperbarui. Penggemar disarankan
-          untuk selalu memantau kanal resmi penjualan agar terhindar dari
-          penipuan.
-        </p>
+        <p className="whitespace-pre-line">{post.content}</p>
+
         <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100 space-y-2">
           <h4 className="font-bold text-indigo-900 text-sm">
             Ringkasan Event:
@@ -292,7 +297,7 @@ function DetailPage({ events }: { events: EventItem[] }) {
 
       <div className="pt-6 border-t border-slate-100">
         <a
-          href="https://google.com"
+          href={post.official_link || "https://google.com"}
           target="_blank"
           rel="noreferrer"
           className="block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl text-sm shadow-sm transition-all"
@@ -320,7 +325,7 @@ export default function App() {
         .order("created_at", { ascending: false });
 
       if (error) {
-        console.error("Error fetching events:", error);
+        console.error("Failed to load events:", error);
       } else {
         setEvents(data || []);
       }
@@ -355,6 +360,8 @@ export default function App() {
             element={<HomePage events={events} loading={loading} />}
           />
           <Route path="/event/:slug" element={<DetailPage events={events} />} />
+          <Route path="/admin" element={<AdminPage />} />
+          <Route path="/login" element={<LoginPage />} />{" "}
         </Routes>
       </main>
 
