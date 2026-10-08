@@ -1,9 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { Routes, Route, Link, useParams } from "react-router-dom";
+import { supabase } from "./lib/supabase";
 
-// ----------------------------------------------------------------------
-// TYPES
-// ----------------------------------------------------------------------
 interface EventItem {
   id: string;
   slug: string;
@@ -23,9 +21,6 @@ interface AdsterraBannerProps {
   width?: number;
 }
 
-// ----------------------------------------------------------------------
-// KOMPONEN IKLAN ADSTERRA (BANNER)
-// ----------------------------------------------------------------------
 function AdsterraBanner({
   atKey,
   height = 90,
@@ -317,19 +312,22 @@ export default function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/events.json")
-      .then((res) => {
-        if (!res.ok) throw new Error("Network response was not ok");
-        return res.json();
-      })
-      .then((data: EventItem[]) => {
-        setEvents(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Failed to load events:", err);
-        setLoading(false);
-      });
+    async function fetchEvents() {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("events")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching events:", error);
+      } else {
+        setEvents(data || []);
+      }
+      setLoading(false);
+    }
+
+    fetchEvents();
   }, []);
 
   return (
