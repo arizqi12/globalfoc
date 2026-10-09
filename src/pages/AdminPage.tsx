@@ -24,6 +24,9 @@ export default function AdminPage() {
   const [msg, setMsg] = useState("");
   const navigate = useNavigate();
 
+  // State untuk melacak mode Edit (null = Mode Tambah Baru)
+  const [editingId, setEditingId] = useState<string | null>(null);
+
   // Form States
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
@@ -63,24 +66,62 @@ export default function AdminPage() {
     }
   };
 
-  // 3. Auto Generate Slug dari Judul
+  // 3. Auto Generate Slug dari Judul (Hanya aktif saat tambah baru / edit manual)
   const handleTitleChange = (val: string) => {
     setTitle(val);
-    const generatedSlug = val
-      .toLowerCase()
-      .replace(/[^a-z0-9 -]/g, "")
-      .replace(/\s+/g, "-")
-      .replace(/-+/g, "-");
-    setSlug(generatedSlug);
+    if (!editingId) {
+      const generatedSlug = val
+        .toLowerCase()
+        .replace(/[^a-z0-9 -]/g, "")
+        .replace(/\s+/g, "-")
+        .replace(/-+/g, "-");
+      setSlug(generatedSlug);
+    }
   };
 
-  // 4. Submit Handler (Tambah Artikel Baru)
+  // 4. Reset Form ke Kondisi Awal
+  const resetForm = () => {
+    setEditingId(null);
+    setTitle("");
+    setSlug("");
+    setCategory("Concert");
+    setExcerpt("");
+    setContent("");
+    setDate("");
+    setLocation("");
+    setPrice("");
+    setImage("");
+    setOfficialLink("");
+    setFeatured(false);
+  };
+
+  // 5. Trigger Edit (Isi Form dengan Data Artikel yang Dipilih)
+  const handleStartEdit = (item: EventItem) => {
+    setEditingId(item.id);
+    setTitle(item.title);
+    setSlug(item.slug);
+    setCategory(item.category || "Concert");
+    setExcerpt(item.excerpt || "");
+    setContent(item.content || "");
+    setDate(item.date || "");
+    setLocation(item.location || "");
+    setPrice(item.price || "");
+    setImage(item.image || "");
+    setOfficialLink(item.official_link || "");
+    setFeatured(!!item.featured);
+    setMsg("");
+
+    // Scroll halus ke atas menuju form
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // 6. Submit Handler (Tambah Baru atau Update Artikel)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMsg("");
 
-    const newEvent = {
+    const eventPayload = {
       title,
       slug,
       category,
@@ -94,42 +135,51 @@ export default function AdminPage() {
       featured,
     };
 
-    const { error } = await supabase.from("events").insert([newEvent]);
+    if (editingId) {
+      // --- MODE EDIT (UPDATE) ---
+      const { error } = await supabase
+        .from("events")
+        .update(eventPayload)
+        .eq("id", editingId);
 
-    if (error) {
-      console.error(error);
-      setMsg(`❌ Gagal menambah data: ${error.message}`);
+      if (error) {
+        console.error(error);
+        setMsg(`❌ Gagal memperbarui data: ${error.message}`);
+      } else {
+        setMsg("✅ Artikel berhasil diperbarui!");
+        resetForm();
+        fetchEvents();
+      }
     } else {
-      setMsg("✅ Artikel berhasil dipublikasikan ke database!");
-      // Reset Form
-      setTitle("");
-      setSlug("");
-      setExcerpt("");
-      setContent("");
-      setDate("");
-      setLocation("");
-      setPrice("");
-      setImage("");
-      setOfficialLink("");
-      setFeatured(false);
-      fetchEvents();
+      // --- MODE TAMBAH BARU (INSERT) ---
+      const { error } = await supabase.from("events").insert([eventPayload]);
+
+      if (error) {
+        console.error(error);
+        setMsg(`❌ Gagal menambah data: ${error.message}`);
+      } else {
+        setMsg("✅ Artikel berhasil dipublikasikan ke database!");
+        resetForm();
+        fetchEvents();
+      }
     }
     setLoading(false);
   };
 
-  // 5. Delete Handler (Hapus Artikel)
+  // 7. Delete Handler
   const handleDelete = async (id: string) => {
     if (!confirm("Yakin ingin menghapus artikel ini dari database?")) return;
 
     const { error } = await supabase.from("events").delete().eq("id", id);
     if (!error) {
+      if (editingId === id) resetForm();
       fetchEvents();
     } else {
       alert(`Gagal hapus data: ${error.message}`);
     }
   };
 
-  // 6. Logout Handler
+  // 8. Logout Handler
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/login");
@@ -184,14 +234,25 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* Form Input Artikel Baru */}
+      {/* Form Input / Edit Artikel */}
       <form
         onSubmit={handleSubmit}
         className="bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs space-y-4"
       >
-        <h2 className="text-lg font-bold text-slate-800 border-b border-slate-100 pb-2">
-          Tambah Artikel / Event Baru
-        </h2>
+        <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+          <h2 className="text-lg font-bold text-slate-800">
+            {editingId ? "Edit Artikel" : "Tambah Artikel / Event Baru"}
+          </h2>
+          {editingId && (
+            <button
+              type="button"
+              onClick={resetForm}
+              className="text-xs font-semibold text-rose-600 hover:underline"
+            >
+              Batal Edit
+            </button>
+          )}
+        </div>
 
         <div className="grid md:grid-cols-2 gap-4">
           <div>
@@ -210,7 +271,7 @@ export default function AdminPage() {
 
           <div>
             <label className="block text-xs font-medium text-slate-700 mb-1">
-              URL Slug (Otomatis)
+              URL Slug
             </label>
             <input
               type="text"
@@ -357,13 +418,32 @@ export default function AdminPage() {
           </div>
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl text-sm transition-all shadow-xs disabled:opacity-50"
-        >
-          {loading ? "Menyimpan ke Supabase..." : "Publish Artikel ke Database"}
-        </button>
+        <div className="flex gap-2">
+          <button
+            type="submit"
+            disabled={loading}
+            className={`flex-1 font-bold py-3 rounded-xl text-sm transition-all shadow-xs disabled:opacity-50 text-white ${
+              editingId
+                ? "bg-amber-600 hover:bg-amber-700"
+                : "bg-indigo-600 hover:bg-indigo-700"
+            }`}
+          >
+            {loading
+              ? "Menyimpan..."
+              : editingId
+                ? "Simpan Perubahan Artikel"
+                : "Publish Artikel ke Database"}
+          </button>
+          {editingId && (
+            <button
+              type="button"
+              onClick={resetForm}
+              className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-4 py-3 rounded-xl text-sm transition-colors"
+            >
+              Batal
+            </button>
+          )}
+        </div>
       </form>
 
       {/* Tabel Data Artikel */}
@@ -393,7 +473,13 @@ export default function AdminPage() {
                     </span>
                   </td>
                   <td className="p-3 text-slate-500">{e.date}</td>
-                  <td className="p-3 text-right">
+                  <td className="p-3 text-right space-x-2">
+                    <button
+                      onClick={() => handleStartEdit(e)}
+                      className="bg-amber-50 text-amber-700 hover:bg-amber-100 px-2.5 py-1 rounded font-semibold transition-colors"
+                    >
+                      Edit
+                    </button>
                     <button
                       onClick={() => handleDelete(e.id)}
                       className="bg-rose-50 text-rose-600 hover:bg-rose-100 px-2.5 py-1 rounded font-semibold transition-colors"
