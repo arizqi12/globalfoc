@@ -1,12 +1,10 @@
 import { useEffect, useState, useRef } from "react";
 import { Routes, Route, Link, useParams } from "react-router-dom";
 import { supabase } from "./lib/supabase";
+import { getPostUrl } from "./lib/url";
 import AdminPage from "./pages/AdminPage";
-import LoginPage from "./pages/LoginPage"; //  1. Import Halaman Login
+import LoginPage from "./pages/LoginPage";
 
-// ----------------------------------------------------------------------
-// TYPES
-// ----------------------------------------------------------------------
 interface EventItem {
   id: string;
   slug: string;
@@ -90,7 +88,7 @@ function HomePage({
     );
   }
 
-  const categories = ["All", "Concert", "Festival", "Trends", "Lifestyle"];
+  const categories = ['All', 'News', 'Viral', 'Concert', 'Festival', 'Trends', 'Lifestyle']
   const filteredEvents =
     selectedCategory === "All"
       ? events
@@ -139,7 +137,7 @@ function HomePage({
             </div>
             <h2 className="text-xl md:text-2xl font-bold text-slate-900 leading-snug">
               <Link
-                to={`/event/${featuredPost.slug}`}
+                to={getPostUrl(featuredPost)}
                 className="hover:text-indigo-600 transition-colors"
               >
                 {featuredPost.title}
@@ -151,7 +149,7 @@ function HomePage({
             <div className="pt-2 flex items-center justify-between text-xs text-slate-500 border-t border-slate-100">
               <span>📍 {featuredPost.location}</span>
               <Link
-                to={`/event/${featuredPost.slug}`}
+                to={getPostUrl(featuredPost)}
                 className="text-indigo-600 font-semibold hover:underline"
               >
                 Read Article &rarr;
@@ -171,25 +169,28 @@ function HomePage({
       {/* Grid Articles Section */}
       <section className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {regularPosts.map((post) => (
-          <article
-            key={post.id}
-            className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-2xs flex flex-col justify-between hover:border-slate-300 transition-all"
-          >
+          <article key={post.id} className="...">
             <div>
-              <div className="h-44 w-full overflow-hidden">
-                <img
-                  src={post.image}
-                  alt={post.title}
-                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                />
-              </div>
+              {/* Gambar Artikel (Bisa di-klik) */}
+              <Link to={getPostUrl(post)}>
+                <div className="h-44 w-full overflow-hidden">
+                  <img
+                    src={post.image}
+                    alt={post.title}
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+              </Link>
+
               <div className="p-4 space-y-2">
                 <span className="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-medium">
                   {post.category}
                 </span>
+
+                {/* Judul Artikel */}
                 <h3 className="font-bold text-slate-900 text-base line-clamp-2 leading-snug">
                   <Link
-                    to={`/event/${post.slug}`}
+                    to={getPostUrl(post)}
                     className="hover:text-indigo-600 transition-colors"
                   >
                     {post.title}
@@ -203,8 +204,10 @@ function HomePage({
 
             <div className="p-4 border-t border-slate-100 text-xs text-slate-500 flex justify-between items-center">
               <span>{post.date}</span>
+
+              {/* Tombol Read / Selengkapnya */}
               <Link
-                to={`/event/${post.slug}`}
+                to={getPostUrl(post)}
                 className="text-indigo-600 font-semibold hover:underline"
               >
                 Read &rarr;
@@ -270,6 +273,13 @@ function DetailPage({ events }: { events: EventItem[] }) {
     );
   }
 
+  const isEvent = ["concert", "festival", "event"].includes(
+    post.category.toLowerCase(),
+  );
+  const isHotNews = ["news", "viral", "trends"].includes(
+    post.category.toLowerCase(),
+  );
+
   return (
     <article className="bg-white rounded-2xl border border-slate-200 p-6 md:p-8 space-y-6 max-w-3xl mx-auto shadow-2xs">
       <Link
@@ -280,19 +290,39 @@ function DetailPage({ events }: { events: EventItem[] }) {
       </Link>
 
       <header className="space-y-3">
-        <span className="text-xs bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full font-semibold border border-indigo-200">
-          {post.category}
-        </span>
+        <div className="flex items-center gap-2">
+          {/* Badge Kategori dengan Warna Kondisional */}
+          <span
+            className={`text-xs px-3 py-1 rounded-full font-bold border ${
+              isHotNews
+                ? "bg-rose-50 text-rose-600 border-rose-200 animate-pulse"
+                : "bg-indigo-50 text-indigo-700 border-indigo-200"
+            }`}
+          >
+            {isHotNews ? `🔥 ${post.category.toUpperCase()}` : post.category}
+          </span>
+        </div>
+
         <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 leading-tight">
           {post.title}
         </h1>
-        <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 border-y border-slate-100 py-3">
-          <span>🗓️ {post.date}</span>
-          <span>📍 {post.location}</span>
-          <span>💰 {post.price}</span>
-        </div>
+
+        {/* TAMPILAN KONDISIONAL:
+            Hanya tampilkan Tanggal/Lokasi/Harga jika tipe konten adalah EVENT */}
+        {isEvent ? (
+          <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 border-y border-slate-100 py-3">
+            <span>🗓️ {post.date}</span>
+            <span>📍 {post.location}</span>
+            <span>💰 {post.price}</span>
+          </div>
+        ) : (
+          <div className="text-xs text-slate-400 border-y border-slate-100 py-2">
+            Dipublikasikan pada {post.date || "Terbaru"} • GlobalFoc Trending
+          </div>
+        )}
       </header>
 
+      {/* Cover Image */}
       <div className="rounded-xl overflow-hidden h-72 md:h-96 w-full">
         <img
           src={post.image}
@@ -301,44 +331,56 @@ function DetailPage({ events }: { events: EventItem[] }) {
         />
       </div>
 
-      <AdsterraBanner
-        atKey="YOUR_ADSTERRA_BANNER_KEY"
-        height={90}
-        width={728}
-      />
+      {/* Slot Iklan Adsterra Banner */}
+      <AdsterraBanner atKey="YOUR_ADSTERRA_KEY" height={90} width={728} />
 
+      {/* Konten Artikel */}
       <div className="prose prose-slate text-slate-700 text-sm leading-relaxed space-y-4">
-        <p className="text-base font-medium text-slate-900">{post.excerpt}</p>
+        <p className="text-base font-semibold text-slate-900 leading-normal">
+          {post.excerpt}
+        </p>
         <p className="whitespace-pre-line">{post.content}</p>
 
-        <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100 space-y-2">
-          <h4 className="font-bold text-indigo-900 text-sm">
-            Ringkasan Event:
-          </h4>
-          <ul className="list-disc list-inside text-xs space-y-1 text-indigo-800">
-            <li>
-              <strong>Lokasi:</strong> {post.location}
-            </li>
-            <li>
-              <strong>Estimasi Harga:</strong> {post.price}
-            </li>
-            <li>
-              <strong>Tanggal Pelaksanaan:</strong> {post.date}
-            </li>
-          </ul>
-        </div>
+        {/* Kotak Ringkasan Khusus Event (Hanya Muncul Jika Event) */}
+        {isEvent && (
+          <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100 space-y-2">
+            <h4 className="font-bold text-indigo-900 text-sm">
+              Ringkasan Event:
+            </h4>
+            <ul className="list-disc list-inside text-xs space-y-1 text-indigo-800">
+              <li>
+                <strong>Lokasi:</strong> {post.location}
+              </li>
+              <li>
+                <strong>Estimasi Harga:</strong> {post.price}
+              </li>
+              <li>
+                <strong>Tanggal Pelaksanaan:</strong> {post.date}
+              </li>
+            </ul>
+          </div>
+        )}
       </div>
 
-      <div className="pt-6 border-t border-slate-100">
-        <a
-          href={post.official_link || "https://google.com"}
-          target="_blank"
-          rel="noreferrer"
-          className="block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl text-sm shadow-sm transition-all"
-        >
-          Cek Official Link & War Tiket
-        </a>
-      </div>
+      {/* Tombol Aksi Bawah */}
+      {post.official_link && (
+        <div className="pt-6 border-t border-slate-100">
+          <a
+            href={post.official_link}
+            target="_blank"
+            rel="noreferrer"
+            className={`block w-full text-center font-bold py-3 rounded-xl text-sm shadow-sm transition-all text-white ${
+              isHotNews
+                ? "bg-slate-900 hover:bg-black"
+                : "bg-indigo-600 hover:bg-indigo-700"
+            }`}
+          >
+            {isHotNews
+              ? "Baca Sumber Asli / Klarifikasi"
+              : "Cek Official Link & War Tiket"}
+          </a>
+        </div>
+      )}
     </article>
   );
 }
@@ -390,9 +432,17 @@ export default function App() {
             path="/"
             element={<HomePage events={events} loading={loading} />}
           />
+
+          {/* Multi-route detail page */}
           <Route path="/event/:slug" element={<DetailPage events={events} />} />
+          <Route path="/news/:slug" element={<DetailPage events={events} />} />
+          <Route
+            path="/article/:slug"
+            element={<DetailPage events={events} />}
+          />
+
           <Route path="/admin" element={<AdminPage />} />
-          <Route path="/login" element={<LoginPage />} />{" "}
+          <Route path="/login" element={<LoginPage />} />
         </Routes>
       </main>
 

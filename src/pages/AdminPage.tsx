@@ -286,17 +286,21 @@ export default function AdminPage() {
         <div className="grid md:grid-cols-3 gap-4">
           <div>
             <label className="block text-xs font-medium text-slate-700 mb-1">
-              Kategori
+              Kategori Artikel
             </label>
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full text-sm border border-slate-300 rounded-lg p-2.5 outline-hidden"
+              className="w-full text-sm border border-slate-300 rounded-lg p-2.5 outline-hidden focus:ring-2 focus:ring-indigo-500"
             >
-              <option value="Concert">Concert</option>
-              <option value="Festival">Festival</option>
-              <option value="Trends">Trends</option>
-              <option value="Lifestyle">Lifestyle</option>
+              <option value="News">News (Berita Terkini)</option>
+              <option value="Viral">Viral (Kontroversi / Hot Topic)</option>
+              <option value="Concert">Concert (Konser Musik)</option>
+              <option value="Festival">Festival (Musik & Acara)</option>
+              <option value="Trends">Trends (Hiburan & Pop Culture)</option>
+              <option value="Lifestyle">
+                Lifestyle (Olahraga & Gaya Hidup)
+              </option>
             </select>
           </div>
 

@@ -2,31 +2,37 @@
   {
     "id": "1",
     "slug": "konser-seventeen-jakarta-2026",
-    "title": "SEVENTEEN World Tour in Jakarta",
+    "title": "Jadwal & Harga Tiket SEVENTEEN World Tour Jakarta 2026",
     "category": "Concert",
     "date": "15 Nov 2026",
-    "location": "GBK Madya Stadium, Jakarta",
+    "location": "GBK Madya, Jakarta",
     "price": "Rp 1.500.000 - Rp 3.800.000",
-    "status": "Upcoming"
+    "image": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80",
+    "excerpt": "Panduan lengkap jadwal war tiket, prediksi seatplan, dan tata cara pembelian tiket resmi SEVENTEEN Jakarta.",
+    "featured": true
   },
   {
     "id": "2",
     "slug": "coldplay-asia-tour-2026",
-    "title": "Coldplay Music of the Spheres Asia",
-    "category": "Concert",
+    "title": "Coldplay Tambah Tanggal Asia Tour 2026: Cek Cara War Tiket",
+    "category": "Trends",
     "date": "20 Des 2026",
     "location": "National Stadium, Singapore",
     "price": "$128 - $398",
-    "status": "War Soon"
+    "image": "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80",
+    "excerpt": "Simak tips tembus antrean presale dan estimasi total biaya akomodasi buat nonton Coldplay di Singapore.",
+    "featured": false
   },
   {
     "id": "3",
-    "slug": "pesta-pora-2026",
-    "title": "Pestapora Festival 2026",
+    "slug": "pesta-pora-2026-lineup",
+    "title": "Bocoran Lineup Phase 1 Pestapora 2026 & Harga Presale",
     "category": "Festival",
     "date": "25-27 Sep 2026",
-    "location": "Gambir Expo Kemayoran, Jakarta",
+    "location": "Gambir Expo, Jakarta",
     "price": "Rp 450.000 - Rp 750.000",
-    "status": "Presale On"
+    "image": "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?auto=format&fit=crop&w=800&q=80",
+    "excerpt": "Festival musik terbesar Pestapora kembali hadir. Berikut daftar musisi lokal dan internasional yang dirumorkan tampil.",
+    "featured": false
   }
 ]
