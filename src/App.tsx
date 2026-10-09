@@ -217,12 +217,47 @@ function HomePage({
   );
 }
 
-// ----------------------------------------------------------------------
-// 2. HALAMAN DETAIL ARTIKEL (TARGET SEO)
-// ----------------------------------------------------------------------
 function DetailPage({ events }: { events: EventItem[] }) {
   const { slug } = useParams();
-  const post = events.find((e) => e.slug === slug);
+  const [post, setPost] = useState<EventItem | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // 1. Cari dulu dari state props
+    const existing = events.find((e) => e.slug === slug);
+    if (existing) {
+      setPost(existing);
+      setLoading(false);
+      return;
+    }
+
+    // 2. Jika tidak ada / direct access, fetch langsung ke Supabase
+    async function fetchSingleEvent() {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("events")
+        .select("*")
+        .eq("slug", slug)
+        .single();
+
+      if (!error && data) {
+        setPost(data);
+      }
+      setLoading(false);
+    }
+
+    if (slug) {
+      fetchSingleEvent();
+    }
+  }, [slug, events]);
+
+  if (loading) {
+    return (
+      <div className="p-12 text-center text-slate-500 font-medium">
+        Memuat artikel...
+      </div>
+    );
+  }
 
   if (!post) {
     return (
@@ -266,7 +301,6 @@ function DetailPage({ events }: { events: EventItem[] }) {
         />
       </div>
 
-      {/* Slot Iklan Banner Tengah Artikel */}
       <AdsterraBanner
         atKey="YOUR_ADSTERRA_BANNER_KEY"
         height={90}
@@ -309,9 +343,6 @@ function DetailPage({ events }: { events: EventItem[] }) {
   );
 }
 
-// ----------------------------------------------------------------------
-// 3. MAIN APP ROUTER
-// ----------------------------------------------------------------------
 export default function App() {
   const [events, setEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
